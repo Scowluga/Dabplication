@@ -2,9 +2,11 @@ package com.example.david.dabplication;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
@@ -62,16 +64,18 @@ public class MainActivity extends Activity {
         int dab_num = getSharedPreferences("PREFERENCE", MODE_PRIVATE).getInt("DAB_NUM", 0);
         tv.setText(String.valueOf(dab_num));
         
-        tv.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // Open Settings Activity
-                // Look at Xerox Scanner Code
-
-
-
-            }
-        });
+//        tv.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                // Open Settings Activity
+//                Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+//                startActivity(intent);
+//
+//                // Add animations :O
+//
+//
+//            }
+//        });
 
     }
 
@@ -196,7 +200,7 @@ public class MainActivity extends Activity {
         });
     }
 
-    private void runAnim(final Context c, float x1, float y1, float x2, float y2, final long time) {
+    private void runAnim(final Context c, final float x1, final float y1, final float x2, final float y2, final long time) {
         tv.setText("" + (Integer.parseInt(tv.getText().toString()) + 1));
 
         final float xs, ys, xe, ye;
@@ -317,7 +321,7 @@ public class MainActivity extends Activity {
 
 
                 // random between
-                long animDuration = time;
+                long animDuration = (long)(time * (Math.sqrt(Math.pow(xe - xs, 2) + Math.pow(ye - ys, 2)) / Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2))));
 
                 iv.animate().translationX(xe).setDuration(animDuration).start();
                 iv.animate().translationY(ye).setDuration(animDuration).start();
@@ -443,7 +447,8 @@ public class MainActivity extends Activity {
     public boolean onTouchEvent(MotionEvent event) {
         int action = event.getActionMasked();
         int index = event.getActionIndex();
-//                Log.d("TAG", event.toString());
+
+        Log.d("TAG", event.toString());
 
         if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN) {
             // create new array of points, add it to the end
@@ -452,19 +457,23 @@ public class MainActivity extends Activity {
 
 //            Log.d("TAG", String.format("Down: (%f, %f)", event.getX(index), event.getY(index)));
         } else if (action == MotionEvent.ACTION_MOVE) {
-            // update the move location in touchInfo
-            if (touchInfo.get(index).get(0).t == -1) {
-                // is being held
-                runAnim(MainActivity.this, event.getX(index), event.getY(index));
-            } else if (touchInfo.get(index).getR(0).t - touchInfo.get(index).get(0).t > 1000
-                    && Math.abs(touchInfo.get(index).get(0).x - event.getX(index)) + Math.abs(touchInfo.get(index).get(0).y - event.getY(index)) < 100) {
-                // initiate hold
-                touchInfo.get(index).get(0).t = -1;
-            } else {
-                // just update
-                touchInfo.get(index).add(new P(event.getX(index), event.getY(index), event.getEventTime()));
-            }
+//            for (int i = 0; i <= event.getPointerCount() - 1; i++) {
+            int i = index;
+                // update the move location in touchInfo
+                if (touchInfo.get(i).get(0).t == -1) {
+                    // is being held
+                    runAnim(MainActivity.this, event.getX(i), event.getY(i));
 
+                    //
+                } else if (touchInfo.get(i).getR(0).t - touchInfo.get(i).get(0).t > 1000
+                        && Math.abs(touchInfo.get(i).getR(Math.min(15, touchInfo.get(i).size() - 1)).x - event.getX(i)) + Math.abs(touchInfo.get(i).getR(Math.min(15, touchInfo.get(i).size() - 1)).y - event.getY(i)) < 100) {
+                    // initiate hold
+                    touchInfo.get(i).get(0).t = -1;
+                } else {
+                    // just update
+                    touchInfo.get(i).add(new P(event.getX(i), event.getY(i), event.getEventTime()));
+                }
+//            }
 //                Log.d("TAG", String.format("Move: (%f, %f)", event.getX(index), event.getY(index)));
 
         } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP) {
@@ -491,7 +500,7 @@ public class MainActivity extends Activity {
 //                        Log.d("TAG", "> SWIPE <");
             }
 
-                touchInfo.remove(index);
+            touchInfo.remove(index);
         }
         return super.onTouchEvent(event);
     }
